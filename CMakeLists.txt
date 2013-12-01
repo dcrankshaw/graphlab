@@ -419,27 +419,28 @@ if(NOT NO_JAVAC)
   # LibHDFS =====================================================================
   # If JNI is found we install libhdfs which allows programs to read and write
   # to hdfs filesystems
-#  if( JNI_REALLY_FOUND )
+  if( JNI_REALLY_FOUND )
     message(STATUS "Building libhdfs")
-#     ExternalProject_Add(hadoop
+ #    ExternalProject_Add(hadoop
 #       PREFIX ${GraphLab_SOURCE_DIR}/deps/hadoop
 #       URL http://graphlab.org/deps/hadoop-1.0.1.tar.gz
 # #      URL http://www.gtlib.gatech.edu/pub/apache/hadoop/common/hadoop-1.0.1/hadoop-1.0.1.tar.gz
 #       URL_MD5 e627d9b688c4de03cba8313bd0bba148
-#       UPDATE_COMMAND chmod +x <SOURCE_DIR>/src/c++/libhdfs/install-sh <SOURCE_DIR>/src/c++/libhdfs/configure
-#       PATCH_COMMAND patch -N -p1 -i ${GraphLab_SOURCE_DIR}/patches/libhdfs.patch || true
+# #      UPDATE_COMMAND chmod +x <SOURCE_DIR>/src/c++/libhdfs/install-sh <SOURCE_DIR>/src/c++/libhdfs/configure
+# #      PATCH_COMMAND patch -N -p1 -i ${GraphLab_SOURCE_DIR}/patches/libhdfs.patch || true
 #       BUILD_IN_SOURCE 1
-#       CONFIGURE_COMMAND <SOURCE_DIR>/src/c++/libhdfs/configure JVM_ARCH=tune=generic --prefix=<INSTALL_DIR> --with-java=${JAVA_HOME} --enable-shared=no --enable-static=yes
+#       CONFIGURE_COMMAND ""
+#       BUILD_COMMAND ant -Dcompile.c++=true -Dlibhdfs=true compile-c++-libhdfs
 #       INSTALL_DIR ${GraphLab_SOURCE_DIR}/deps/local
+#       INSTALL_COMMAND bash -c "cp <SOURCE_DIR>/build/c++/Linux-amd64-64/lib/* <INSTALL_DIR>/lib/."
 #       TEST_COMMAND bash -c "mkdir -p <INSTALL_DIR>/include && cp <SOURCE_DIR>/src/c++/libhdfs/hdfs.h <INSTALL_DIR>/include")
 
-
-    set(HADOOP_FOUND 1 CACHE BOOL "Hadoop was found")
-    link_directories("/root/hadoop-native")
-    include_directories("/root/ephemeral-hdfs/src/c++/libhdfs")
+include_directories(/root/ephemeral-hdfs/src/c++/libhdfs)
+link_directories(/root/ephemeral-hdfs/c++/Linux-amd64-64/lib)
+ set(HADOOP_FOUND 1 CACHE BOOL "Hadoop was found")
     add_definitions(-DHAS_HADOOP)
     # link_libraries(hdfs ${JAVA_JVM_LIBRARY})
- # endif( JNI_REALLY_FOUND )
+  endif( JNI_REALLY_FOUND )
 
 
 
@@ -486,6 +487,8 @@ endif()
 
 ## =============================================================
 # Core graphlab requirements
+
+
 macro(requires_core_deps NAME)
   target_link_libraries(${NAME}
     ${Boost_LIBRARIES}
@@ -498,10 +501,10 @@ macro(requires_core_deps NAME)
   if(MPI_FOUND)
     target_link_libraries(${NAME} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
   endif(MPI_FOUND)
-  if(HADOOP_FOUND)
-    target_link_libraries(${NAME} hdfs ${JAVA_JVM_LIBRARY})
-    add_dependencies(${NAME} hadoop)
-  endif(HADOOP_FOUND)
+ # if(HADOOP_FOUND)
+    target_link_libraries(${NAME} hdfs  ${JAVA_JVM_LIBRARY})
+   # add_dependencies(${NAME} hadoop)
+ # endif(HADOOP_FOUND)
 endmacro(requires_core_deps)
 
 
