@@ -593,7 +593,7 @@ struct save_triangle_count{
 
 
 int main(int argc, char** argv) {
-  global_logger().set_log_level(LOG_WARNING);
+  global_logger().set_log_level(LOG_INFO);
 
   std::cout << "This program counts the exact number of triangles in the "
             "provided graph.\n\n";
