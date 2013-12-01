@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 
   graphlab::mpi_tools::init(argc, argv);
   graphlab::distributed_control dc;
-  global_logger().set_log_level(LOG_DEBUG);
+  global_logger().set_log_level(LOG_WARNING);
   //parse options
   graphlab::command_line_options clopts("Connected Component.");
   std::string graph_dir;
@@ -187,11 +187,13 @@ int main(int argc, char** argv) {
   graph.transform_vertices(initialize_vertex);
 
   //running the engine
-  time_t start, end;
+
   graphlab::omni_engine<label_propagation> engine(dc, graph, exec_type, clopts);
   engine.signal_all();
-  time(&start);
   engine.start();
+  const double runtime = engine.elapsed_seconds();
+  dc.cout() << "Finished Running engine in " << runtime
+            << " seconds." << std::endl;
 
   //write results
   if (saveprefix.size() > 0) {

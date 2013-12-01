@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +27,10 @@
 #include <graphlab/util/hopscotch_set.hpp>
 #include <graphlab/macros_def.hpp>
 /**
- *  
+ *
  * In this program we implement the "hash-set" version of the
  * "edge-iterator" algorithm described in
- * 
+ *
  *    T. Schank. Algorithmic Aspects of Triangle-Based Network Analysis.
  *    Phd in computer science, University Karlsruhe, 2007.
  *
@@ -39,7 +39,7 @@
  *   - For each edge (u,v) in the graph, count the number of intersections
  *     of the neighbor set on u and the neighbor set on v.
  *   - We store the size of the intersection on the edge.
- * 
+ *
  * This will count every triangle exactly 3 times. Summing across all the
  * edges and dividing by 3 gives the desired result.
  *
@@ -56,18 +56,18 @@
  * Then you can see that each triangle
  *
  * \verbatim
-  
+
      A----->C
      |     ^
      |   /
      v /
      B
-   
+
  * \endverbatim
  * Must be counted only once. (Only when processing edge AB, can one
  * observe that A and B have intersecting out-neighbor sets).
  */
- 
+
 
 // Radix sort implementation from https://github.com/gorset/radix
 // Thanks to Erik Gorset
@@ -396,7 +396,7 @@ struct set_union_gather {
     }
     return *this;
   }
-  
+
   // serialize
   void save(graphlab::oarchive& oarc) const {
     oarc << bool(vid_vec.size() == 0);
@@ -441,7 +441,7 @@ public:
   edge_dir_type gather_edges(icontext_type& context,
                              const vertex_type& vertex) const {
     return graphlab::ALL_EDGES;
-  } 
+  }
 
   /*
    * For each edge, figure out the ID of the "other" vertex
@@ -455,7 +455,7 @@ public:
                                        edge.source().id() : edge.target().id();
 
     size_t other_nbrs = (edge.target().id() == vertex.id()) ?
-        (edge.source().num_in_edges() + edge.source().num_out_edges()): 
+        (edge.source().num_in_edges() + edge.source().num_out_edges()):
         (edge.target().num_in_edges() + edge.target().num_out_edges());
 
     size_t my_nbrs = vertex.num_in_edges() + vertex.num_out_edges();
@@ -463,13 +463,13 @@ public:
     if (PER_VERTEX_COUNT || (other_nbrs > my_nbrs) || (other_nbrs == my_nbrs && otherid > vertex.id())) {
     //if (PER_VERTEX_COUNT || otherid > vertex.id()) {
      gather.v = otherid;
-    } 
+    }
     return gather;
   }
 
   /*
    * the gather result now contains the vertex IDs in the neighborhood.
-   * store it on the vertex. 
+   * store it on the vertex.
    */
   void apply(icontext_type& context, vertex_type& vertex,
              const gather_type& neighborhood) {
@@ -524,7 +524,7 @@ public:
  * This class is used in a second engine call if per vertex counts are needed.
  * The number of triangles a vertex is involved in can be computed easily
  * by summing over the number of triangles each adjacent edge is involved in
- * and dividing by 2. 
+ * and dividing by 2.
  */
 class get_per_vertex_count :
       public graphlab::ivertex_program<graph_type, size_t>,
@@ -576,14 +576,14 @@ size_t get_edge_data(const graph_type::edge_type& e) {
  * A saver which saves a file where each line is a vid / # triangles pair
  */
 struct save_triangle_count{
-  std::string save_vertex(graph_type::vertex_type v) { 
+  std::string save_vertex(graph_type::vertex_type v) {
     double nt = v.data().num_triangles;
     double n_followed = v.num_out_edges();
     double n_following = v.num_in_edges();
 
     return graphlab::tostr(v.id()) + "\t" +
            graphlab::tostr(nt) + "\t" +
-           graphlab::tostr(n_followed) + "\t" + 
+           graphlab::tostr(n_followed) + "\t" +
            graphlab::tostr(n_following) + "\n";
   }
   std::string save_edge(graph_type::edge_type e) {
@@ -593,6 +593,8 @@ struct save_triangle_count{
 
 
 int main(int argc, char** argv) {
+  global_logger().set_log_level(LOG_WARNING);
+
   std::cout << "This program counts the exact number of triangles in the "
             "provided graph.\n\n";
 
@@ -609,7 +611,7 @@ int main(int argc, char** argv) {
                        "Graph input. reads all graphs matching prefix*");
   clopts.attach_option("format", format,
                        "The graph format");
- clopts.attach_option("ht", HASH_THRESHOLD,
+  clopts.attach_option("ht", HASH_THRESHOLD,
                        "Above this size, hash sets are used");
   clopts.attach_option("per_vertex", per_vertex,
                        "If not empty, will count the number of "
@@ -635,6 +637,7 @@ int main(int argc, char** argv) {
   graphlab::mpi_tools::init(argc, argv);
   graphlab::distributed_control dc;
 
+
   graphlab::launch_metric_server();
   // load graph
   graph_type graph(dc, clopts);
@@ -644,13 +647,15 @@ int main(int argc, char** argv) {
             << "Number of edges:    " << graph.num_edges() << std::endl;
 
   graphlab::timer ti;
-  
+
   // create engine to count the number of triangles
   dc.cout() << "Counting Triangles..." << std::endl;
   engine_type engine(dc, graph, clopts);
   engine.signal_all();
   engine.start();
-
+  const double runtime = engine.elapsed_seconds();
+  dc.cout() << "Finished Running engine in " << runtime
+            << " seconds." << std::endl;
   dc.cout() << "Counted in " << ti.current_time() << " seconds" << std::endl;
 
   if (PER_VERTEX_COUNT == false) {
@@ -669,7 +674,7 @@ int main(int argc, char** argv) {
             clopts.get_ncpus()); /* one file per machine */
 
   }
-  
+
   graphlab::stop_metric_server();
 
   graphlab::mpi_tools::finalize();
