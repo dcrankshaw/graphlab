@@ -192,11 +192,8 @@ size_t double_count_active_edges(const graph_type::vertex_type& vertex) {
 struct save_core_at_k {
   std::string save_vertex(graph_type::vertex_type) { return ""; }
   std::string save_edge(graph_type::edge_type e) {
-    if (e.source().data() > 0 && e.target().data() > 0) {
-      return graphlab::tostr(e.source().id()) + "\t" +
-        graphlab::tostr(e.target().id()) + "\n";
-    }
-    else return "";
+    return graphlab::tostr(e.source().id()) + "\t" +
+      graphlab::tostr(e.target().id()) + "\n";
   }
 };
     
@@ -272,15 +269,24 @@ int main(int argc, char** argv) {
               << numv << "   #E = " << nume << std::endl;
 
     // Saves the result if requested
+    // if (savecores != "") {
+    //   graph.save(savecores + "." + graphlab::tostr(CURRENT_K) + ".",
+    //              save_core_at_k(),
+    //              false, /* no compression */ 
+    //              false, /* do not save vertex */
+    //              true, /* save edge */ 
+    //              clopts.get_ncpus()); /* one file per machine */
+    // }
+  }
+
     if (savecores != "") {
-      graph.save(savecores + "." + graphlab::tostr(CURRENT_K) + ".",
+      graph.save(savecores + "." + graphlab::tostr(0) + ".",
                  save_core_at_k(),
                  false, /* no compression */ 
                  false, /* do not save vertex */
                  true, /* save edge */ 
                  clopts.get_ncpus()); /* one file per machine */
     }
-  }
   
   graphlab::mpi_tools::finalize();
   return EXIT_SUCCESS;
